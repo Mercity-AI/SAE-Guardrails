@@ -119,11 +119,6 @@ python training/ablations.py
 |-----|-------|-----------|----------|
 | `gemma-3-1b-it` | Gemma 3 1B IT | Gemma Scope v2 | JumpReLU |
 | `gemma-3-4b-it` | Gemma 3 4B IT | Gemma Scope v2 | JumpReLU |
-| `gemma-2-9b-it` | Gemma 2 9B IT | Gemma Scope v1 | JumpReLU |
-| `0.6B` | Qwen3 0.6B Base | Qwen SAE | TopK |
-| `1.7B` | Qwen3 1.7B Base | Qwen SAE | TopK |
-| `1.7B-Instruct` | Qwen3 1.7B IT | Qwen SAE | TopK |
-| `8B` | Qwen3 8B Base | Qwen SAE | TopK |
 
 ## Topic Taxonomy
 
