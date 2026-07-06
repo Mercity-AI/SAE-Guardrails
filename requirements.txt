@@ -1,0 +1,15 @@
+torch
+transformers
+datasets
+safetensors
+huggingface_hub
+numpy
+pandas
+scikit-learn
+tqdm
+matplotlib
+reportlab
+markdown
+pyyaml
+python-dotenv
+openai

@@ -1,0 +1,27 @@
+[project]
+name = "sae-guardrails"
+version = "0.1.0"
+description = "Guardrails built on sparse autoencoders (SAEs) for interpreting and controlling model behavior."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch",
+    "transformers",
+    "datasets",
+    "safetensors",
+    "huggingface_hub",
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "tqdm",
+    "matplotlib",
+    "reportlab",
+    "markdown",
+    "pyyaml",
+    "python-dotenv",
+    "openai",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

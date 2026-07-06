@@ -1,0 +1,60 @@
+# -- Model ----------------------------------------------------------------------
+# Verify the exact deployed model string before a large run.
+model: gpt-5.4-mini
+
+reasoning_effort: medium
+reasoning_summary: auto
+
+# Legacy single-temperature fallback. The temperature plan below takes priority.
+temperature: null
+
+temperature_selection_mode: weighted # random | uniform | weighted
+temperatures: [0.9]
+temperature_weights: [1]
+
+# Upper bound on tokens the model may produce per API call (covers reasoning +
+# the batch of prompts requested in samples_per_call).
+max_output_tokens: 32000
+
+# -- Generation shape -------------------------------------------------------------
+# Prompts to generate per subtopic. 28 subtopics -> total = target_per_subtopic * 28.
+target_per_subtopic: 36
+
+# Which adversarial levels to sample from. Set to [0] for direct/non-adversarial
+# only, [3, 4] for hard camouflage only, or [0, 1, 2, 3, 4] for the full range.
+adversarial_levels: [0]
+
+# Prompts requested per API call. num_batches = ceil(total / samples_per_call).
+samples_per_call: 8
+
+# Max API calls running concurrently.
+max_concurrent: 8
+
+# Base RNG seed for spec sampling.
+seed: 42
+
+# Base label for the run directory; the script appends a timestamp.
+run_directory: gpt54_updated_1706
+
+# -- Service tier and retry ---------------------------------------------------------
+primary_tier: flex
+fallback_tier: default
+
+# Retries per tier before giving up on that tier and moving to the fallback.
+max_retries_per_tier: 3
+
+# Exponential backoff bounds in seconds (jittered).
+backoff_min: 1.0
+backoff_max: 60.0
+
+# Per-request timeout in seconds.
+timeout: 300.0
+
+# -- Paths ---------------------------------------------------------------------------
+# Output directory for run artifacts (prompts.jsonl, summary.json, config.json).
+# Resolved relative to this config file's directory.
+output_dir: runs
+
+# -- Debug -----------------------------------------------------------------------------
+# Print the system prompt and one example batch, then exit without calling the API.
+dry_run: false
