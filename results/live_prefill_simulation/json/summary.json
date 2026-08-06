@@ -1,0 +1,278 @@
+{
+  "checkpoint": "results/tcn_2k_clean/convnext/checkpoint.pt",
+  "base_model": "google/gemma-3-1b-it",
+  "sae_release": "gemma-scope-2-1b-it-res-all",
+  "layers": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25
+  ],
+  "attention_backend": "flash_attention_2",
+  "uncertainty_method": "95% empirical interval from Monte Carlo dropout",
+  "mc_dropout_draws": 50,
+  "samples": [
+    {
+      "dataset_index": 1589,
+      "dataset_id": "item-1630-af6440cb",
+      "selection": "weak",
+      "topics": [
+        "General news & content",
+        "Enterprise documents"
+      ],
+      "cached_ranking_accuracy": 0.6923076923076923,
+      "prefill_replay_accuracy": 0.893491124260355,
+      "feature_parity": {
+        "mean_absolute_error": 31.763408660888672,
+        "max_absolute_error": 885.0
+      },
+      "path": "results/live_prefill_simulation/sample_weak_1589.json"
+    },
+    {
+      "dataset_index": 1082,
+      "dataset_id": "item-1042-8b4a0c97",
+      "selection": "weak",
+      "topics": [
+        "General news & content",
+        "Financial"
+      ],
+      "cached_ranking_accuracy": 0.7207207207207207,
+      "prefill_replay_accuracy": 0.45045045045045046,
+      "feature_parity": {
+        "mean_absolute_error": 36.693031311035156,
+        "max_absolute_error": 880.0
+      },
+      "path": "results/live_prefill_simulation/sample_weak_1082.json"
+    },
+    {
+      "dataset_index": 1643,
+      "dataset_id": "item-1634-5f84e422",
+      "selection": "weak",
+      "topics": [
+        "HR & people operations",
+        "Financial"
+      ],
+      "cached_ranking_accuracy": 0.7227272727272728,
+      "prefill_replay_accuracy": 0.44545454545454544,
+      "feature_parity": {
+        "mean_absolute_error": 28.560386657714844,
+        "max_absolute_error": 874.0
+      },
+      "path": "results/live_prefill_simulation/sample_weak_1643.json"
+    },
+    {
+      "dataset_index": 1238,
+      "dataset_id": "item-1235-f31f2d9e",
+      "selection": "weak",
+      "topics": [
+        "HR & people operations",
+        "Customer service"
+      ],
+      "cached_ranking_accuracy": 0.7556390977443609,
+      "prefill_replay_accuracy": 0.36466165413533835,
+      "feature_parity": {
+        "mean_absolute_error": 38.056640625,
+        "max_absolute_error": 884.5
+      },
+      "path": "results/live_prefill_simulation/sample_weak_1238.json"
+    },
+    {
+      "dataset_index": 647,
+      "dataset_id": "item-652-57b5ab88",
+      "selection": "weak",
+      "topics": [
+        "HR & people operations",
+        "Enterprise documents"
+      ],
+      "cached_ranking_accuracy": 0.7583333333333333,
+      "prefill_replay_accuracy": 0.6333333333333333,
+      "feature_parity": {
+        "mean_absolute_error": 33.02806854248047,
+        "max_absolute_error": 867.5
+      },
+      "path": "results/live_prefill_simulation/sample_weak_647.json"
+    },
+    {
+      "dataset_index": 1742,
+      "dataset_id": "item-1766-4d2ff86f",
+      "selection": "weak",
+      "topics": [
+        "Financial",
+        "Enterprise documents"
+      ],
+      "cached_ranking_accuracy": 0.7669902912621359,
+      "prefill_replay_accuracy": 0.4854368932038835,
+      "feature_parity": {
+        "mean_absolute_error": 36.89878463745117,
+        "max_absolute_error": 870.5
+      },
+      "path": "results/live_prefill_simulation/sample_weak_1742.json"
+    },
+    {
+      "dataset_index": 1825,
+      "dataset_id": "item-1841-f364e584",
+      "selection": "weak",
+      "topics": [
+        "Customer service",
+        "Legal"
+      ],
+      "cached_ranking_accuracy": 0.7740112994350282,
+      "prefill_replay_accuracy": 0.847457627118644,
+      "feature_parity": {
+        "mean_absolute_error": 34.13491439819336,
+        "max_absolute_error": 863.5
+      },
+      "path": "results/live_prefill_simulation/sample_weak_1825.json"
+    },
+    {
+      "dataset_index": 1807,
+      "dataset_id": "item-1845-246475b4",
+      "selection": "weak",
+      "topics": [
+        "Legal",
+        "HR & people operations"
+      ],
+      "cached_ranking_accuracy": 0.8,
+      "prefill_replay_accuracy": 0.6625,
+      "feature_parity": {
+        "mean_absolute_error": 40.52281188964844,
+        "max_absolute_error": 882.5
+      },
+      "path": "results/live_prefill_simulation/sample_weak_1807.json"
+    },
+    {
+      "dataset_index": 1796,
+      "dataset_id": "item-1842-8cc4e132",
+      "selection": "strong",
+      "topics": [
+        "Customer service",
+        "General news & content"
+      ],
+      "cached_ranking_accuracy": 0.9878048780487805,
+      "prefill_replay_accuracy": 0.9146341463414634,
+      "feature_parity": {
+        "mean_absolute_error": 37.15354919433594,
+        "max_absolute_error": 880.5
+      },
+      "path": "results/live_prefill_simulation/sample_strong_1796.json"
+    },
+    {
+      "dataset_index": 1051,
+      "dataset_id": "item-1056-0b71bfc3",
+      "selection": "strong",
+      "topics": [
+        "Enterprise documents",
+        "Healthcare"
+      ],
+      "cached_ranking_accuracy": 0.9842767295597484,
+      "prefill_replay_accuracy": 0.9685534591194969,
+      "feature_parity": {
+        "mean_absolute_error": 35.29726791381836,
+        "max_absolute_error": 893.0
+      },
+      "path": "results/live_prefill_simulation/sample_strong_1051.json"
+    },
+    {
+      "dataset_index": 202,
+      "dataset_id": "item-218-ba5e21bb",
+      "selection": "strong",
+      "topics": [
+        "Healthcare",
+        "Legal"
+      ],
+      "cached_ranking_accuracy": 0.976,
+      "prefill_replay_accuracy": 0.98,
+      "feature_parity": {
+        "mean_absolute_error": 34.142425537109375,
+        "max_absolute_error": 888.5
+      },
+      "path": "results/live_prefill_simulation/sample_strong_202.json"
+    },
+    {
+      "dataset_index": 1715,
+      "dataset_id": "item-1752-e1d8ba69",
+      "selection": "strong",
+      "topics": [
+        "General news & content",
+        "Healthcare"
+      ],
+      "cached_ranking_accuracy": 0.9748743718592965,
+      "prefill_replay_accuracy": 0.964824120603015,
+      "feature_parity": {
+        "mean_absolute_error": 32.60374069213867,
+        "max_absolute_error": 883.5
+      },
+      "path": "results/live_prefill_simulation/sample_strong_1715.json"
+    },
+    {
+      "dataset_index": 91,
+      "dataset_id": "item-99-0d0c5eb5",
+      "selection": "strong",
+      "topics": [
+        "Enterprise documents",
+        "General news & content"
+      ],
+      "cached_ranking_accuracy": 0.9692307692307692,
+      "prefill_replay_accuracy": 0.9384615384615385,
+      "feature_parity": {
+        "mean_absolute_error": 40.06589889526367,
+        "max_absolute_error": 896.0
+      },
+      "path": "results/live_prefill_simulation/sample_strong_91.json"
+    },
+    {
+      "dataset_index": 1748,
+      "dataset_id": "item-1790-11ab52e2",
+      "selection": "strong",
+      "topics": [
+        "HR & people operations",
+        "Healthcare"
+      ],
+      "cached_ranking_accuracy": 0.9640287769784173,
+      "prefill_replay_accuracy": 0.7805755395683454,
+      "feature_parity": {
+        "mean_absolute_error": 38.03585433959961,
+        "max_absolute_error": 895.0
+      },
+      "path": "results/live_prefill_simulation/sample_strong_1748.json"
+    },
+    {
+      "dataset_index": 577,
+      "dataset_id": "item-596-ee8d2150",
+      "selection": "strong",
+      "topics": [
+        "Legal",
+        "HR & people operations"
+      ],
+      "cached_ranking_accuracy": 0.9625,
+      "prefill_replay_accuracy": 0.7666666666666667,
+      "feature_parity": {
+        "mean_absolute_error": 37.88485336303711,
+        "max_absolute_error": 880.5
+      },
+      "path": "results/live_prefill_simulation/sample_strong_577.json"
+    },
+    {
+      "dataset_index": 1056,
+      "dataset_id": "item-1080-c5e4ecd6",
+      "selection": "strong",
+      "topics": [
+        "Financial",
+        "General news & content"
+      ],
+      "cached_ranking_accuracy": 0.9576547231270358,
+      "prefill_replay_accuracy": 0.9283387622149837,
+      "feature_parity": {
+        "mean_absolute_error": 34.440555572509766,
+        "max_absolute_error": 891.5
+      },
+      "path": "results/live_prefill_simulation/sample_strong_1056.json"
+    }
+  ]
+}
