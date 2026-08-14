@@ -1,4 +1,5 @@
 """Shared causal TCN models, data utilities, and original-coordinate metrics."""
+
 from __future__ import annotations
 
 import math
@@ -89,7 +90,9 @@ def collate(rows, input_features: int = 500):
     """Right-pad variable-length feature and label sequences into one batch."""
     length = max(len(features) for features, _ in rows)
     first_features, first_labels = rows[0]
-    device = first_features.device if isinstance(first_features, torch.Tensor) else "cpu"
+    device = (
+        first_features.device if isinstance(first_features, torch.Tensor) else "cpu"
+    )
     x_batch = torch.zeros(len(rows), length, input_features, device=device)
     y_batch = torch.full((len(rows), length), PAD, dtype=torch.long, device=device)
     for index, (features, labels) in enumerate(rows):
@@ -138,6 +141,7 @@ class ResidualBlock(nn.Module):
         """Apply the causal convolution and residual update."""
         convolved = self.conv(values)
         if self.padding:
+            # Drop the right-hand pad so each position sees only itself and the past.
             convolved = convolved[..., : -self.padding]
         return values + self.drop(torch.relu(self.norm(convolved)))
 
@@ -158,7 +162,10 @@ class BaselineTCN(nn.Module):
         super().__init__()
         self.input = nn.Conv1d(input_features, channels, 1)
         self.blocks = nn.Sequential(
-            *(ResidualBlock(channels, 2**index, kernel, dropout) for index in range(depth))
+            *(
+                ResidualBlock(channels, 2**index, kernel, dropout)
+                for index in range(depth)
+            )
         )
         self.head = nn.Conv1d(channels, classes, 1)
 
@@ -185,6 +192,7 @@ class GatedBlock(nn.Module):
         """Apply the gated causal convolution and residual update."""
         convolved = self.conv(values)
         if self.padding:
+            # Drop the right-hand pad so each position sees only itself and the past.
             convolved = convolved[..., : -self.padding]
         value, gate = self.norm(convolved).chunk(2, dim=1)
         return values + self.drop(torch.tanh(value) * torch.sigmoid(gate))
@@ -229,7 +237,9 @@ class MultiScaleBlock(nn.Module):
         """Create parallel dilated convolution branches."""
         super().__init__()
         if channels < len(kernels):
-            raise ValueError("channels must be at least the number of multi-scale kernels")
+            raise ValueError(
+                "channels must be at least the number of multi-scale kernels"
+            )
         branch_channels = channels // len(kernels)
         self.paddings = [(kernel - 1) * dilation for kernel in kernels]
         self.branches = nn.ModuleList(
@@ -252,6 +262,7 @@ class MultiScaleBlock(nn.Module):
         for conv, padding in zip(self.branches, self.paddings):
             branch = conv(values)
             if padding:
+                # Drop the right-hand pad so each position sees only itself and the past.
                 branch = branch[..., :-padding]
             branches.append(branch)
         merged = self.merge(torch.cat(branches, dim=1))
@@ -321,6 +332,7 @@ class ConvNeXtBlock(nn.Module):
         """Apply the ConvNeXt transformation and residual update."""
         hidden = self.depthwise(values)
         if self.padding:
+            # Drop the right-hand pad so each position sees only itself and the past.
             hidden = hidden[..., : -self.padding]
         hidden = self.contract(torch.nn.functional.gelu(self.expand(self.norm(hidden))))
         return values + self.drop(self.scale * hidden)
@@ -489,17 +501,16 @@ class CausalTransformer(nn.Module):
             batch_first=True,
             norm_first=True,
         )
-        self.encoder = nn.TransformerEncoder(
-            layer, depth, nn.LayerNorm(hidden_width)
-        )
+        self.encoder = nn.TransformerEncoder(layer, depth, nn.LayerNorm(hidden_width))
         self.head = nn.Linear(hidden_width, classes)
 
     def forward(self, values):
         """Return topic logits without attending to later tokens."""
         length = values.shape[1]
-        mask = torch.ones(
-            length, length, dtype=torch.bool, device=values.device
-        ).triu(1)
+        # Strict upper-triangular mask: position i may attend to j only when j <= i.
+        mask = torch.ones(length, length, dtype=torch.bool, device=values.device).triu(
+            1
+        )
         hidden = self.project(values) * math.sqrt(self.hidden_width)
         return self.head(self.encoder(hidden, mask=mask, is_causal=True))
 
@@ -537,7 +548,10 @@ class JointCausalTransformer(nn.Module):
     def forward(self, values):
         """Return causal per-token topic and boundary logits."""
         length = values.shape[1]
-        mask = torch.ones(length, length, dtype=torch.bool, device=values.device).triu(1)
+        # Strict upper-triangular mask: position i may attend to j only when j <= i.
+        mask = torch.ones(length, length, dtype=torch.bool, device=values.device).triu(
+            1
+        )
         hidden = self.project(values) * math.sqrt(self.hidden_width)
         hidden = self.encoder(hidden, mask=mask, is_causal=True)
         return self.topic_head(hidden), self.boundary_head(hidden).squeeze(-1)
@@ -585,7 +599,9 @@ def predict_sequences(model, rows, device="cuda", batch_size: int = 1, decoder=N
             result.append(
                 {
                     "labels": label_values,
-                    "predictions": decode_logits(logits[index, : len(features)], decoder),
+                    "predictions": decode_logits(
+                        logits[index, : len(features)], decoder
+                    ),
                 }
             )
     return result
@@ -659,7 +675,9 @@ def boundary_report(rows, tolerance: int):
                 if abs(candidate - int(position)) <= tolerance
             ]
             if candidates:
-                candidate = min(candidates, key=lambda value: abs(value - int(position)))
+                candidate = min(
+                    candidates, key=lambda value: abs(value - int(position))
+                )
                 unused.remove(candidate)
                 matched += 1
                 errors.append(candidate - int(position))
@@ -668,7 +686,9 @@ def boundary_report(rows, tolerance: int):
     return {
         "precision": precision,
         "recall": recall,
-        "f1": 2 * precision * recall / (precision + recall) if precision + recall else 0.0,
+        "f1": (
+            2 * precision * recall / (precision + recall) if precision + recall else 0.0
+        ),
         "matched": matched,
         "predicted": predicted,
         "true": true,
@@ -708,7 +728,9 @@ def topic_detection_latency(rows, confirmation_tokens: int = 3):
 
     def summarize(values):
         """Summarize detection coverage and conditional latency values."""
-        detected = [(length, consumed) for length, consumed in values if consumed is not None]
+        detected = [
+            (length, consumed) for length, consumed in values if consumed is not None
+        ]
         tokens = np.asarray([consumed for _, consumed in detected], dtype=np.float64)
         fractions = np.asarray(
             [consumed / length for length, consumed in detected], dtype=np.float64
@@ -736,7 +758,9 @@ def topic_detection_latency(rows, confirmation_tokens: int = 3):
         ),
         "confirmation_tokens": int(confirmation_tokens),
         "overall": summarize(pooled),
-        "per_topic": {topic: summarize(values) for topic, values in observations.items()},
+        "per_topic": {
+            topic: summarize(values) for topic, values in observations.items()
+        },
     }
 
 
@@ -757,8 +781,12 @@ def metrics(rows, tolerances: list[int] | None = None):
         "macro_f1": float(f1_score(truth, predicted, average="macro", zero_division=0)),
         "topic_overlap": topic_overlap(truth, predicted),
         "per_topic": {topic: report[topic] for topic in TOPICS},
-        "topic_detection_first_correct": topic_detection_latency(rows, confirmation_tokens=1),
-        "topic_detection_confirmed_3": topic_detection_latency(rows, confirmation_tokens=3),
+        "topic_detection_first_correct": topic_detection_latency(
+            rows, confirmation_tokens=1
+        ),
+        "topic_detection_confirmed_3": topic_detection_latency(
+            rows, confirmation_tokens=3
+        ),
     }
     for tolerance in tolerances:
         result[f"boundary_at_{tolerance}"] = boundary_report(rows, tolerance)

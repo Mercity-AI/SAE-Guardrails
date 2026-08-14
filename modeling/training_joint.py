@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Shared joint topic-and-boundary training engine."""
+
 from __future__ import annotations
 
 import json
@@ -45,7 +46,9 @@ def load_rows(cache: Path):
     offsets = np.r_[0, np.cumsum(lengths)]
     rows = []
     for start, end in zip(offsets[:-1], offsets[1:]):
-        rows.append((features[start:end], labels[start:end].astype(np.int64), roles[start:end]))
+        rows.append(
+            (features[start:end], labels[start:end].astype(np.int64), roles[start:end])
+        )
     split = np.load(cache / "split_indices.npz")
     return rows, {name: split[name] for name in ("train", "validation", "test")}
 
@@ -74,10 +77,14 @@ def collate(rows, indices, input_features, include_turn_transition):
     """Right-pad selected joint-training sequences into one batch."""
     selected = [rows[int(index)] for index in indices]
     length = max(len(row[0]) for row in selected)
-    device = selected[0][0].device if isinstance(selected[0][0], torch.Tensor) else "cpu"
+    device = (
+        selected[0][0].device if isinstance(selected[0][0], torch.Tensor) else "cpu"
+    )
     x = torch.zeros(len(selected), length, input_features, device=device)
     topics = torch.full((len(selected), length), PAD, dtype=torch.long, device=device)
-    boundaries = torch.full((len(selected), length), PAD, dtype=torch.long, device=device)
+    boundaries = torch.full(
+        (len(selected), length), PAD, dtype=torch.long, device=device
+    )
     for index, (features, labels, roles) in enumerate(selected):
         size = len(labels)
         feature_tensor = (
@@ -114,7 +121,9 @@ def collate(rows, indices, input_features, include_turn_transition):
                 (label_tensor != PAD) & (role_tensor == 2), as_tuple=False
             ).flatten()
             if len(prompt) and len(response):
-                target[response[0]] = (label_tensor[prompt[-1]] != label_tensor[response[0]]).long()
+                target[response[0]] = (
+                    label_tensor[prompt[-1]] != label_tensor[response[0]]
+                ).long()
         boundaries[index, :size] = target
     return x, topics, boundaries
 
@@ -125,8 +134,10 @@ def predict(model, rows, indices, device, threshold, batch_size=1, decoder=None)
     model.eval()
     output = []
     for start in range(0, len(indices), batch_size):
-        selected_indices = indices[start:start + batch_size]
-        x, _, _ = collate(rows, selected_indices, rows[int(selected_indices[0])][0].shape[-1], True)
+        selected_indices = indices[start : start + batch_size]
+        x, _, _ = collate(
+            rows, selected_indices, rows[int(selected_indices[0])][0].shape[-1], True
+        )
         topic_logits, boundary_logits = model(x.to(device))
         for offset, row_index in enumerate(selected_indices):
             features, labels, roles = rows[int(row_index)]
@@ -141,17 +152,24 @@ def predict(model, rows, indices, device, threshold, batch_size=1, decoder=None)
                 if isinstance(roles, torch.Tensor)
                 else np.asarray(roles)
             )
-            output.append({
-                "labels": label_values,
-                "roles": role_values,
-                "topic_predictions": decode_logits(
-                    topic_logits[offset, :size].float().cpu().numpy(), decoder
-                ),
-                "boundary_predictions": (
-                    boundary_logits[offset, :size].sigmoid() >= threshold
-                ).cpu().numpy(),
-                "boundary_scores": boundary_logits[offset, :size].sigmoid().cpu().numpy(),
-            })
+            output.append(
+                {
+                    "labels": label_values,
+                    "roles": role_values,
+                    "topic_predictions": decode_logits(
+                        topic_logits[offset, :size].float().cpu().numpy(), decoder
+                    ),
+                    "boundary_predictions": (
+                        boundary_logits[offset, :size].sigmoid() >= threshold
+                    )
+                    .cpu()
+                    .numpy(),
+                    "boundary_scores": boundary_logits[offset, :size]
+                    .sigmoid()
+                    .cpu()
+                    .numpy(),
+                }
+            )
     return output
 
 
@@ -214,7 +232,9 @@ def evaluate(model, rows, indices, device, threshold, batch_size=1, decoder=None
 
 def clone_state(model):
     """Copy a model state to CPU memory for checkpoint retention."""
-    return {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
+    return {
+        key: value.detach().cpu().clone() for key, value in model.state_dict().items()
+    }
 
 
 def train_joint_model(config_path: Path):
@@ -246,12 +266,14 @@ def train_joint_model(config_path: Path):
     )
     topic_loss_fn = nn.CrossEntropyLoss(ignore_index=PAD)
     include_turn = bool(training.get("train_turn_transition", True))
-    train_targets = np.concatenate([
-        boundary_targets(
-            rows[int(i)][1], rows[int(i)][2], include_turn_transition=include_turn
-        )
-        for i in split["train"]
-    ])
+    train_targets = np.concatenate(
+        [
+            boundary_targets(
+                rows[int(i)][1], rows[int(i)][2], include_turn_transition=include_turn
+            )
+            for i in split["train"]
+        ]
+    )
     positives = int((train_targets == 1).sum())
     negatives = int((train_targets == 0).sum())
     if positives == 0:
@@ -262,12 +284,18 @@ def train_joint_model(config_path: Path):
         if configured_weight == "auto"
         else float(configured_weight)
     )
-    boundary_loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(positive_weight, device=device))
+    boundary_loss_fn = nn.BCEWithLogitsLoss(
+        pos_weight=torch.tensor(positive_weight, device=device)
+    )
     if bool(experiment.get("gpu_resident_cache", False)):
         rows = [
             (
-                torch.from_numpy(np.array(features, dtype=np.float32, copy=True)).to(device),
-                torch.from_numpy(np.array(labels, dtype=np.int64, copy=True)).to(device),
+                torch.from_numpy(np.array(features, dtype=np.float32, copy=True)).to(
+                    device
+                ),
+                torch.from_numpy(np.array(labels, dtype=np.int64, copy=True)).to(
+                    device
+                ),
                 torch.from_numpy(np.array(roles, dtype=np.int64, copy=True)).to(device),
             )
             for features, labels, roles in rows
@@ -288,7 +316,7 @@ def train_joint_model(config_path: Path):
         for start in range(0, len(permutation), batch_size):
             x, topics, boundaries = collate(
                 rows,
-                permutation[start:start + batch_size],
+                permutation[start : start + batch_size],
                 model_config["input_features"],
                 include_turn,
             )
@@ -303,7 +331,8 @@ def train_joint_model(config_path: Path):
                 boundary_logits.reshape(-1)[keep], flat_boundaries[keep].float()
             )
             loss = topic_loss + boundary_weight * boundary_loss
-            optimizer.zero_grad(); loss.backward()
+            optimizer.zero_grad()
+            loss.backward()
             nn.utils.clip_grad_norm_(
                 model.parameters(), float(training["gradient_clip_norm"])
             )
@@ -319,7 +348,9 @@ def train_joint_model(config_path: Path):
             decoder,
         )
         score = validation["combined"]["topic_macro_f1"]
-        history.append({"epoch": epoch, "loss": float(np.mean(losses)), "validation": validation})
+        history.append(
+            {"epoch": epoch, "loss": float(np.mean(losses)), "validation": validation}
+        )
         print(
             f"epoch {epoch:2d}: loss={np.mean(losses):.4f} "
             f"val_topic_f1={score:.4f} "
@@ -356,21 +387,39 @@ def train_joint_model(config_path: Path):
     )
     model.load_state_dict(best_state)
     best_validation = evaluate(
-        model, rows, split["validation"], device, threshold, evaluation_batch_size, decoder
+        model,
+        rows,
+        split["validation"],
+        device,
+        threshold,
+        evaluation_batch_size,
+        decoder,
     )
     best_test = evaluate(
         model, rows, split["test"], device, threshold, evaluation_batch_size, decoder
     )
     model.load_state_dict(best_boundary_state)
     best_boundary_validation = evaluate(
-        model, rows, split["validation"], device, threshold, evaluation_batch_size, decoder
+        model,
+        rows,
+        split["validation"],
+        device,
+        threshold,
+        evaluation_batch_size,
+        decoder,
     )
     best_boundary_test = evaluate(
         model, rows, split["test"], device, threshold, evaluation_batch_size, decoder
     )
     model.load_state_dict(final_state)
     final_validation = evaluate(
-        model, rows, split["validation"], device, threshold, evaluation_batch_size, decoder
+        model,
+        rows,
+        split["validation"],
+        device,
+        threshold,
+        evaluation_batch_size,
+        decoder,
     )
     final_test = evaluate(
         model, rows, split["test"], device, threshold, evaluation_batch_size, decoder
@@ -394,7 +443,8 @@ def train_joint_model(config_path: Path):
     }
     for checkpoint_name, values in checkpoint_metrics.items():
         (output / f"{checkpoint_name}.metrics.json").write_text(
-            json.dumps({"checkpoint": f"{checkpoint_name}.pt", **values}, indent=2) + "\n"
+            json.dumps({"checkpoint": f"{checkpoint_name}.pt", **values}, indent=2)
+            + "\n"
         )
     results = {
         "best_epoch": best_epoch,

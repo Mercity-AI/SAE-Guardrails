@@ -11,7 +11,6 @@ from collections.abc import Mapping
 
 import numpy as np
 
-
 CAUSAL_DECODERS = {"raw", "minimum_duration", "hysteresis", "transition_penalty"}
 OFFLINE_DECODERS = {"viterbi"}
 
@@ -62,7 +61,10 @@ def decode_hysteresis(logits: np.ndarray, margin: float = 0.2) -> np.ndarray:
     output[0] = state
     for index, distribution in enumerate(probabilities[1:], start=1):
         challenger = int(distribution.argmax())
-        if challenger != state and distribution[challenger] - distribution[state] >= margin:
+        if (
+            challenger != state
+            and distribution[challenger] - distribution[state] >= margin
+        ):
             state = challenger
         output[index] = state
     return output
@@ -83,6 +85,8 @@ def decode_transition_penalty(logits: np.ndarray, penalty: float = 1.0) -> np.nd
         if proposed == state:
             challenger, evidence = -1, 0.0
         else:
+            # Accumulate the challenger's log-odds over the current state, clamped at
+            # zero, and only switch once that evidence clears the penalty threshold.
             increment = float(distribution[proposed] - distribution[state])
             if proposed != challenger:
                 challenger, evidence = proposed, 0.0
@@ -116,7 +120,9 @@ def decode_viterbi(logits: np.ndarray, penalty: float = 1.0) -> np.ndarray:
     return path
 
 
-def normalize_decoder_config(config: str | Mapping[str, object] | None) -> dict[str, object]:
+def normalize_decoder_config(
+    config: str | Mapping[str, object] | None,
+) -> dict[str, object]:
     """Normalize a decoder name or mapping into one validated configuration."""
     if config is None:
         normalized: dict[str, object] = {"method": "raw"}
@@ -141,7 +147,9 @@ def decode_logits(
     decoder = normalize_decoder_config(config)
     method = str(decoder["method"])
     if require_causal and method not in CAUSAL_DECODERS:
-        raise ValueError(f"decoder {method!r} is offline-only and cannot be used in causal training")
+        raise ValueError(
+            f"decoder {method!r} is offline-only and cannot be used in causal training"
+        )
     if method == "raw":
         return decode_raw(logits)
     if method == "minimum_duration":

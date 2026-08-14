@@ -11,20 +11,30 @@ functions:
     tags that disagree with the topics list, prompt/response order mismatch, and any span that returns to a
     finished topic.
 """
+
 from __future__ import annotations
 
 import json
 from typing import Any
 
 LABELS = [
-    "Enterprise documents", "General news & content", "Customer service", "Legal",
-    "Financial", "HR & people operations", "Healthcare",
+    "Enterprise documents",
+    "General news & content",
+    "Customer service",
+    "Legal",
+    "Financial",
+    "HR & people operations",
+    "Healthcare",
 ]
 
 
 def schema_text(schema: dict[str, Any] | None) -> str:
     """Serialize the requested record schema for prompt inclusion."""
-    return "free-form text" if schema is None else json.dumps(schema, ensure_ascii=False, indent=1)
+    return (
+        "free-form text"
+        if schema is None
+        else json.dumps(schema, ensure_ascii=False, indent=1)
+    )
 
 
 def mix_lines(mix: list[dict[str, Any]]) -> str:
@@ -36,7 +46,9 @@ def mix_lines(mix: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def meta_prompt_prompt(description: str, schema: dict[str, Any] | None, mix: list[dict[str, Any]], k: int) -> str:
+def meta_prompt_prompt(
+    description: str, schema: dict[str, Any] | None, mix: list[dict[str, Any]], k: int
+) -> str:
     """Build the teacher prompt for one topic-axis generation request."""
     by_factor = {m["factor"]: m for m in mix}
     primary = by_factor.get("Primary topic", {}).get("node", "")
@@ -46,18 +58,18 @@ def meta_prompt_prompt(description: str, schema: dict[str, Any] | None, mix: lis
 
     if is_single:
         topic_rule = (
-            f"THIS IS A SINGLE-TOPIC RECORD. The one and only topic is \"{primary}\". The topics list MUST be "
-            f"exactly [\"{primary}\"]. The entire prompt and response stay on \"{primary}\" with NO "
+            f'THIS IS A SINGLE-TOPIC RECORD. The one and only topic is "{primary}". The topics list MUST be '
+            f'exactly ["{primary}"]. The entire prompt and response stay on "{primary}" with NO '
             f"boundary and NO second topic. Ignore any boundary-difficulty ingredient — it does not "
             f"apply. Wrap the whole prompt in one <{primary}>...</{primary}> "
             f"tag and the whole response in one <{primary}>...</{primary}> tag."
         )
     else:
         topic_rule = (
-            f"THIS IS A TWO-TOPIC RECORD. First topic \"{primary}\", then a single clean pivot to "
-            f"\"{second}\". The topics list MUST be exactly [\"{primary}\", \"{second}\"], in that order, in "
-            f"both prompt and response. Cover \"{primary}\" fully, then transition once and cover "
-            f"\"{second}\" fully — never return to \"{primary}\". Wrap each span in its own exact tag: "
+            f'THIS IS A TWO-TOPIC RECORD. First topic "{primary}", then a single clean pivot to '
+            f'"{second}". The topics list MUST be exactly ["{primary}", "{second}"], in that order, in '
+            f'both prompt and response. Cover "{primary}" fully, then transition once and cover '
+            f'"{second}" fully — never return to "{primary}". Wrap each span in its own exact tag: '
             f"<{primary}>...</{primary}> then <{second}>...</{second}>."
         )
 
@@ -96,7 +108,9 @@ Return JSON:
 """.strip()
 
 
-def critique_prompt(description: str, schema: dict[str, Any], meta_prompt: str, record: dict[str, Any]) -> str:
+def critique_prompt(
+    description: str, schema: dict[str, Any], meta_prompt: str, record: dict[str, Any]
+) -> str:
     """Build the critic prompt used to validate one generated record."""
     return f"""
 You are a strict validator for a topic-segmentation dataset. Reject on ANY violation below.

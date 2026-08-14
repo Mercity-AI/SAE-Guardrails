@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Shared training engine used by the three architecture entry points."""
+
 from __future__ import annotations
 
 import json
@@ -85,7 +86,9 @@ def train_one(name, specification, config, partitions, output_dir, device):
         "classes": len(TOPICS),
         **specification.get("model", {}),
     }
-    seed_everything(seed, deterministic=bool(config["experiment"].get("deterministic", True)))
+    seed_everything(
+        seed, deterministic=bool(config["experiment"].get("deterministic", True))
+    )
     print(f"{name}: using training and decoder seed {seed}", flush=True)
     model = build_model(specification["architecture"], model_config).to(device)
     learning_rate = float(specification.get("learning_rate", training["learning_rate"]))
@@ -134,9 +137,12 @@ def train_one(name, specification, config, partitions, output_dir, device):
                     # MS-TCN's truncated temporal MSE: suppress rapid changes
                     # inside a true segment without smoothing across boundaries.
                     probability_shift = (
-                        log_probabilities[:, 1:]
-                        - log_probabilities[:, :-1].detach()
-                    ).abs().clamp(max=consistency_tau).square().mean(dim=-1)
+                        (log_probabilities[:, 1:] - log_probabilities[:, :-1].detach())
+                        .abs()
+                        .clamp(max=consistency_tau)
+                        .square()
+                        .mean(dim=-1)
+                    )
                     loss = loss + consistency_weight * probability_shift[stable].mean()
             optimizer.zero_grad()
             loss.backward()
@@ -146,11 +152,18 @@ def train_one(name, specification, config, partitions, output_dir, device):
             optimizer.step()
 
         rows = predict_sequences(
-            model, validation_rows, device=device, batch_size=evaluation_batch_size, decoder=decoder
+            model,
+            validation_rows,
+            device=device,
+            batch_size=evaluation_batch_size,
+            decoder=decoder,
         )
         truth, predicted = flatten_labeled(rows)
         score = f1_score(truth, predicted, average="macro", zero_division=0)
-        print(f"{name} epoch {epoch:2d}/{epochs}: validation macro-F1={score:.4f}", flush=True)
+        print(
+            f"{name} epoch {epoch:2d}/{epochs}: validation macro-F1={score:.4f}",
+            flush=True,
+        )
         if score > best_score:
             best_score = score
             best_epoch = epoch
@@ -160,32 +173,47 @@ def train_one(name, specification, config, partitions, output_dir, device):
             }
 
     final_state = {
-        key: value.detach().cpu().clone()
-        for key, value in model.state_dict().items()
+        key: value.detach().cpu().clone() for key, value in model.state_dict().items()
     }
     tolerances = [int(value) for value in config["evaluation"]["boundary_tolerances"]]
     final_validation_metrics = metrics(
         predict_sequences(
-            model, validation_rows, device=device, batch_size=evaluation_batch_size, decoder=decoder
+            model,
+            validation_rows,
+            device=device,
+            batch_size=evaluation_batch_size,
+            decoder=decoder,
         ),
         tolerances,
     )
     final_test_metrics = metrics(
         predict_sequences(
-            model, partitions["test"], device=device, batch_size=evaluation_batch_size, decoder=decoder
+            model,
+            partitions["test"],
+            device=device,
+            batch_size=evaluation_batch_size,
+            decoder=decoder,
         ),
         tolerances,
     )
     model.load_state_dict(best_state)
     validation_metrics = metrics(
         predict_sequences(
-            model, validation_rows, device=device, batch_size=evaluation_batch_size, decoder=decoder
+            model,
+            validation_rows,
+            device=device,
+            batch_size=evaluation_batch_size,
+            decoder=decoder,
         ),
         tolerances,
     )
     test_metrics = metrics(
         predict_sequences(
-            model, partitions["test"], device=device, batch_size=evaluation_batch_size, decoder=decoder
+            model,
+            partitions["test"],
+            device=device,
+            batch_size=evaluation_batch_size,
+            decoder=decoder,
         ),
         tolerances,
     )
@@ -208,14 +236,30 @@ def train_one(name, specification, config, partitions, output_dir, device):
     run_dir.mkdir(parents=True, exist_ok=True)
     torch.save(best_checkpoint, run_dir / "checkpoint_best.pt")
     torch.save(final_checkpoint, run_dir / "checkpoint_final.pt")
-    (run_dir / "checkpoint_best.metrics.json").write_text(json.dumps({
-        "checkpoint": "checkpoint_best.pt", "epoch": best_epoch,
-        "validation": validation_metrics, "test": test_metrics,
-    }, indent=2) + "\n")
-    (run_dir / "checkpoint_final.metrics.json").write_text(json.dumps({
-        "checkpoint": "checkpoint_final.pt", "epoch": epochs,
-        "validation": final_validation_metrics, "test": final_test_metrics,
-    }, indent=2) + "\n")
+    (run_dir / "checkpoint_best.metrics.json").write_text(
+        json.dumps(
+            {
+                "checkpoint": "checkpoint_best.pt",
+                "epoch": best_epoch,
+                "validation": validation_metrics,
+                "test": test_metrics,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    (run_dir / "checkpoint_final.metrics.json").write_text(
+        json.dumps(
+            {
+                "checkpoint": "checkpoint_final.pt",
+                "epoch": epochs,
+                "validation": final_validation_metrics,
+                "test": final_test_metrics,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
     resolved_config = {
         **config,
         "model_run": {
@@ -306,7 +350,10 @@ def run(config_path: Path, allowed_architectures: set[str] | None = None):
         "runs": {},
     }
     for name, specification in config["models"].items():
-        if allowed_architectures and specification["architecture"] not in allowed_architectures:
+        if (
+            allowed_architectures
+            and specification["architecture"] not in allowed_architectures
+        ):
             continue
         print(f"\n=== {name} ===", flush=True)
         summary["runs"][name] = train_one(

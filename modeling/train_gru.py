@@ -11,7 +11,6 @@ import yaml
 import training
 import training_joint
 
-
 ARCHITECTURES = {"gru", "joint_gru"}
 
 

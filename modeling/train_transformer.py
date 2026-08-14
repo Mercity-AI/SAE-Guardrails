@@ -11,7 +11,6 @@ import yaml
 import training
 import training_joint
 
-
 ARCHITECTURES = {"transformer", "joint_transformer"}
 
 
@@ -23,7 +22,9 @@ def run_config(config_path: Path) -> None:
         return
     architecture = config.get("model", {}).get("architecture")
     if architecture not in ARCHITECTURES:
-        raise ValueError(f"configuration does not describe a Transformer: {architecture}")
+        raise ValueError(
+            f"configuration does not describe a Transformer: {architecture}"
+        )
     training_joint.train_joint_model(config_path)
 
 
