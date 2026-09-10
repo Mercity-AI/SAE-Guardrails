@@ -11,6 +11,12 @@ blog/
 data/
 scrap/
 modelling/configs
+
+# Local project directories
+/modeling/
+/modelling/
+/dataset/
+/blog_online/
 # C extensions
 *.so
 

@@ -1,0 +1,33 @@
+experiment:
+  name: joint_boundary_505
+  output_dir: results/joint_boundary_505
+  seed: 42
+  device: cuda
+data:
+  dataset: runs/2k_run_5.6/dataset.cleaned.jsonl
+  cache_dir: cache/sae500_2k_clean_prompt_response
+  input_features: 500
+  role_ids: role_ids.npy
+  supervision: prompt_and_response_topic_tokens
+training:
+  epochs: 15
+  batch_size: 16
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  gradient_clip_norm: 1.0
+  boundary_loss_weight: 1.0
+  boundary_positive_weight: auto
+  train_turn_transition: true
+  checkpoint_metric: validation_topic_macro_f1
+evaluation:
+  boundary_threshold: 0.5
+  partitions: [prompt, response, combined]
+model:
+  architecture: joint_convnext
+  parameters:
+    channels: 256
+    depth: 6
+    kernel: 9
+    expansion: 4
+    dropout: 0.1
+    layer_scale: 0.01

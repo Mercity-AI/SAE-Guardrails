@@ -1,0 +1,81 @@
+common:
+  records_loaded: 1458
+  training_records: 1167
+  validation_records: 291
+  epochs: 15
+  loss: token_level_cross_entropy
+  checkpoint_selection: best_validation_macro_f1
+  classes: 7
+
+gru_baseline:
+  input_features: 500
+  hidden_width: 256
+  recurrent_layers: 3
+  dropout: 0.1
+  bidirectional: false
+  learning_rate: 0.001
+  training_batch_size: 16
+
+tcn_runs:
+  baseline:
+    channels: 128
+    residual_blocks: 6
+    kernel_width: 3
+    dilations: [1, 2, 4, 8, 16, 32]
+    learning_rate: 0.001
+  deeper:
+    channels: 128
+    residual_blocks: 8
+    kernel_width: 3
+    dilations: [1, 2, 4, 8, 16, 32, 64, 128]
+    learning_rate: 0.001
+  wider:
+    channels: 256
+    residual_blocks: 6
+    kernel_width: 3
+    dilations: [1, 2, 4, 8, 16, 32]
+    learning_rate: 0.001
+  lower_learning_rate:
+    channels: 128
+    residual_blocks: 6
+    learning_rate: 0.0003
+  higher_learning_rate:
+    channels: 128
+    residual_blocks: 6
+    learning_rate: 0.003
+
+transformer_runs:
+  baseline:
+    hidden_width: 128
+    attention_heads: 4
+    transformer_layers: 2
+    feedforward_width: 256
+    dropout: 0.1
+    learning_rate: 0.0003
+    training_batch_size: 4
+  deeper:
+    hidden_width: 128
+    attention_heads: 4
+    transformer_layers: 4
+    feedforward_width: 256
+    dropout: 0.1
+    learning_rate: 0.0003
+    training_batch_size: 4
+  wider:
+    hidden_width: 256
+    attention_heads: 8
+    transformer_layers: 2
+    feedforward_width: 512
+    dropout: 0.1
+    learning_rate: 0.0003
+    training_batch_size: 4
+  lower_learning_rate:
+    hidden_width: 128
+    attention_heads: 4
+    transformer_layers: 2
+    learning_rate: 0.0001
+  higher_learning_rate:
+    hidden_width: 128
+    attention_heads: 4
+    transformer_layers: 2
+    learning_rate: 0.001

@@ -1,0 +1,40 @@
+experiment:
+  name: corrected_tcn_variant_ablations
+  output_dir: results/corrected_tcn_variant_ablations_yaml
+  seed: 42
+  device: cuda
+data:
+  cache_dir: cache/sae500_1500_train_selected
+  split_file: split_indices.npz
+  feature_selection: training_records_only
+  input_features: 500
+  supervision: response_topic_tokens_only
+  prompt_tokens: context_only
+  template_and_neutral_tokens: masked
+training:
+  epochs: 15
+  batch_size: 16
+  learning_rate: 0.001
+  weight_decay: 0.01
+  gradient_clip_norm: 1.0
+  checkpoint_metric: validation_macro_f1
+evaluation:
+  report_partition: test
+  boundary_coordinates: original_token_positions
+  boundary_tolerances: [5, 10]
+models:
+  gated_base: {architecture: gated, model: {channels: 256, depth: 6}, learning_rate: 0.001}
+  gated_deep8: {architecture: gated, model: {channels: 256, depth: 8}, learning_rate: 0.001}
+  gated_wide384: {architecture: gated, model: {channels: 384, depth: 6}, learning_rate: 0.001}
+  gated_lr3e4: {architecture: gated, model: {channels: 256, depth: 6}, learning_rate: 0.0003}
+  gated_lr3e3: {architecture: gated, model: {channels: 256, depth: 6}, learning_rate: 0.003}
+  multiscale_base: {architecture: multiscale, model: {channels: 192, depth: 6}, learning_rate: 0.001}
+  multiscale_deep8: {architecture: multiscale, model: {channels: 192, depth: 8}, learning_rate: 0.001}
+  multiscale_wide256: {architecture: multiscale, model: {channels: 256, depth: 6}, learning_rate: 0.001}
+  multiscale_lr3e4: {architecture: multiscale, model: {channels: 192, depth: 6}, learning_rate: 0.0003}
+  multiscale_lr3e3: {architecture: multiscale, model: {channels: 192, depth: 6}, learning_rate: 0.003}
+  convnext_base: {architecture: convnext, model: {channels: 256, depth: 6}, learning_rate: 0.001}
+  convnext_deep8: {architecture: convnext, model: {channels: 256, depth: 8}, learning_rate: 0.001}
+  convnext_wide384: {architecture: convnext, model: {channels: 384, depth: 6}, learning_rate: 0.001}
+  convnext_lr3e4: {architecture: convnext, model: {channels: 256, depth: 6}, learning_rate: 0.0003}
+  convnext_lr3e3: {architecture: convnext, model: {channels: 256, depth: 6}, learning_rate: 0.003}

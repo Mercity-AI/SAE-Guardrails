@@ -1,0 +1,31 @@
+experiment:
+  name: convnext_consistency
+  output_dir: results/convnext_consistency
+  seed: 42
+  device: cuda
+data:
+  dataset: runs/2k_run_5.6/dataset.cleaned.jsonl
+  cache_dir: cache/sae500_2k_clean_prompt_response
+  split_file: split_indices.npz
+  feature_selection: training_records_only
+  input_features: 500
+  supervision: prompt_and_response_topic_tokens
+  prompt_tokens: supervised
+  template_and_neutral_tokens: masked
+training:
+  epochs: 15
+  batch_size: 16
+  learning_rate: 0.001
+  weight_decay: 0.01
+  gradient_clip_norm: 1.0
+  checkpoint_metric: validation_macro_f1
+  temporal_consistency_weight: 0.15
+  temporal_consistency_tau: 4.0
+evaluation:
+  report_partition: test
+  boundary_coordinates: original_token_positions
+  boundary_tolerances: [5, 10]
+models:
+  convnext_consistency:
+    architecture: convnext
+    model: {channels: 256, depth: 6, kernel: 7, expansion: 4, dropout: 0.1, layer_scale: 0.01}

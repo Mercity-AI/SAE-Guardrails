@@ -1,0 +1,49 @@
+experiment:
+  name: transformer_2k
+  output_dir: results/transformer_2k
+  seed: 42
+  device: cuda
+data:
+  dataset: runs/2k_run_5.6/dataset.cleaned.jsonl
+  cache_dir: cache/sae500_2k_clean_prompt_response
+  split_file: split_indices.npz
+  feature_selection: training_records_only
+  input_features: 500
+  supervision: prompt_and_response_topic_tokens
+  prompt_tokens: supervised
+  template_and_neutral_tokens: masked
+training:
+  epochs: 15
+  batch_size: 4
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  gradient_clip_norm: 1.0
+  checkpoint_metric: validation_macro_f1
+evaluation:
+  report_partition: test
+  boundary_coordinates: original_token_positions
+  boundary_tolerances: [5, 10]
+models:
+  transformer_base:
+    architecture: transformer
+    model: {hidden_width: 128, heads: 4, depth: 2, feedforward_width: 256, dropout: 0.1}
+  transformer_deep:
+    architecture: transformer
+    model: {hidden_width: 128, heads: 4, depth: 4, feedforward_width: 256, dropout: 0.1}
+  transformer_deeper:
+    architecture: transformer
+    model: {hidden_width: 128, heads: 4, depth: 6, feedforward_width: 256, dropout: 0.1}
+  transformer_narrow:
+    architecture: transformer
+    model: {hidden_width: 64, heads: 4, depth: 2, feedforward_width: 128, dropout: 0.1}
+  transformer_wide:
+    architecture: transformer
+    model: {hidden_width: 256, heads: 8, depth: 2, feedforward_width: 512, dropout: 0.1}
+  transformer_lr1e4:
+    architecture: transformer
+    learning_rate: 0.0001
+    model: {hidden_width: 128, heads: 4, depth: 2, feedforward_width: 256, dropout: 0.1}
+  transformer_lr1e3:
+    architecture: transformer
+    learning_rate: 0.001
+    model: {hidden_width: 128, heads: 4, depth: 2, feedforward_width: 256, dropout: 0.1}

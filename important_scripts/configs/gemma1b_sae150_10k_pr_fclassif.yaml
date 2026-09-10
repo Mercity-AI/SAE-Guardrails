@@ -1,0 +1,38 @@
+experiment:
+  name: gemma1b_sae150_10k_pr_fclassif
+  output_dir: results/gemma1b_sae150_10k_pr_fclassif
+  seed: 42
+  device: cuda
+  gpu_resident_cache: true
+data:
+  dataset: runs/GPT_5.6_10k_2108/dataset.final.jsonl
+  cache_dir: cache/sae1500_10k_1b_pr_fclassif
+  split_file: split_indices.npz
+  feature_selection: training_records_only
+  input_features: 1500
+  supervision: prompt_and_response_topic_tokens
+  prompt_tokens: supervised
+  template_and_neutral_tokens: masked
+training:
+  epochs: 15
+  batch_size: 16
+  learning_rate: 0.0003
+  weight_decay: 0.01
+  gradient_clip_norm: 1.0
+  checkpoint_metric: validation_macro_f1
+evaluation:
+  report_partition: test
+  boundary_coordinates: original_token_positions
+  boundary_tolerances: [5, 10]
+models:
+  gru_lr3e4:
+    architecture: gru
+    model: {hidden_width: 256, depth: 3, dropout: 0.1}
+  transformer_wide:
+    architecture: transformer
+    batch_size: 16
+    model: {hidden_width: 256, heads: 8, depth: 2, feedforward_width: 512, dropout: 0.1}
+  convnext_window505:
+    architecture: convnext
+    learning_rate: 0.001
+    model: {channels: 256, depth: 6, kernel: 7, expansion: 4, dropout: 0.1, layer_scale: 0.01}
