@@ -19,8 +19,9 @@ cd "$ROOT"
 export HF_TOKEN
 
 # 1B + 4B static: relabel = write PR labels.npy + symlink the base features (non-destructive).
-python -m important_scripts.cache.relabel_1b_prompt_response    # -> cache/sae1500_10k_1b_pr
-python -m important_scripts.cache.relabel_4b_pr_nondestructive  # -> cache/sae1500_10k_gemma4b_pr
+# One consolidated relabel driven by --model-size (was relabel_1b_prompt_response / relabel_4b_pr_nondestructive).
+python -m important_scripts.cache.relabel_pr --model-size 1b   # -> cache/sae1500_10k_1b_pr
+python -m important_scripts.cache.relabel_pr --model-size 4b   # -> cache/sae1500_10k_gemma4b_pr
 
 # 1B dynamic: identical token order to 1B static (verified byte-equal lengths/roles), so reuse
 # those PR labels as int64 (dynamic analysis indexes with them) + symlink the sparse base arrays.
