@@ -1,15 +1,22 @@
-torch
-transformers
+# Core: detectors, feature extraction, evaluation
+torch>=2.4
+transformers>=4.50
+sae-lens
 datasets
-safetensors
 huggingface_hub
+safetensors
+accelerate
 numpy
-pandas
 scikit-learn
-tqdm
-matplotlib
-reportlab
-markdown
+joblib
 pyyaml
-python-dotenv
+tqdm
+
+# Plots and the off-topic injector / dataset generation (OpenAI-compatible endpoint)
+matplotlib
 openai
+python-dotenv
+
+# Optional
+# flash-attn     # the cache builders and the no-SAE trainer use FlashAttention-2 (falls back to SDPA)
+# wandb          # training logs, when SCOPE_WANDB_PROJECT is set

@@ -1,0 +1,128 @@
+project:
+  name: "GPT_5.6_10k_2108"
+  output_dir: "runs/GPT_5.6_10k_2108"  # resolved from the working directory: run from the repo root
+  seed: 42
+
+# NOTE: taxonomy.json and strategies.json in the output_dir are HAND-AUTHORED by
+# build_taxonomy.py and are reused verbatim by simula. Do NOT delete them — if they
+# are missing, simula would fall back to model-built factors and re-introduce label imbalance / lose
+# the controlled 1-4 topic-count mix. Re-run the builder (pointed at this output_dir) to regenerate.
+
+description: |
+  Generate a dataset of user prompt + assistant response PAIRS for training topic classifiers.
+  Each record is one natural exchange: a realistic user `prompt` and the assistant `response` that
+  answers it, both segmented into contiguous topic-labelled spans, plus `topics` — the topics used,
+  in order. Apart from the tags, nothing in the text names a topic or reveals this is a dataset.
+
+  TOPICS. Every span is one of these seven domains:
+    1. Enterprise documents — internal company material: memos, meeting decisions, SOPs, policies,
+       proposals, roadmaps, post-mortems. (Internal workings, not money analysis, contract wording,
+       or staffing.)
+    2. General news & content — public-facing information for a broad audience: current affairs,
+       science/tech news, culture, sports, society. (Not company-internal material or one person's
+       legal/financial/medical situation.)
+    3. Customer service — a customer seeking help with a product, account, order, or support issue:
+       billing disputes, account access, troubleshooting, returns, escalation.
+    4. Legal — a legal rule, contract, or regulation governs the answer: contract terms, compliance,
+       employment law, intellectual property and licensing.
+    5. Financial — concrete money: amounts, budgets, pricing, banking, insurance, tax, accounting,
+       markets. (Not the legal wording of an instrument or a billing complaint handled as support.)
+    6. HR & people operations — managing people from the employer side: recruiting, onboarding,
+       performance, compensation and leave, scheduling. (Not the legal side of a dispute or
+       company-wide non-people policy.)
+    7. Healthcare — a person's medical situation or population health: symptoms, treatment, labs,
+       public health, mental health. (Not a medical bill handled as money or support.)
+
+  TOPIC COUNT AND BOUNDARIES. Each record uses ONE to FOUR topics, fixed per record by the sampled
+  ingredients — follow them exactly and do not re-decide them. A SINGLE-TOPIC record stays on one
+  topic from start to finish with no boundary. A MULTI-TOPIC record covers the first topic fully,
+  then pivots exactly once to the next and covers it fully, and so on through the ordered list —
+  never alternating, interleaving, repeating, or returning to a finished topic. Each pivot is a
+  natural sentence-level shift inside ordinary prose, never a visible heading, a bullet label, or
+  text that names the topic. All labels in a record are distinct.
+
+  LENGTH. The assistant response (all spans together, tags removed) totals roughly 600 words,
+  spread across however many spans the record has; every span stays substantive. The user prompt is
+  short and natural.
+
+  TAGS. Wrap each topic's span in an XML element whose tag name is that topic's exact label,
+  verbatim including its spaces and `&`, in both the prompt and the response — same topics, same
+  order. Tags never nest or overlap; the seven labels are the ONLY legal tag names (never <strong>,
+  <br>, <table>, list, markdown, or heading tags); removing the tags must leave clean, natural text.
+
+  OUTPUT FORMAT (A, B, C, D stand for whichever labels the ingredients fix; a single-topic record
+  uses one tag and one entry in `topics`, a four-topic record uses four in order):
+  {
+    "prompt": "<A> ...the user's text... </A> <B> ...the user's text... </B>",
+    "response": "<A> ...the reply... </A> <B> ...the reply... </B>",
+    "topics": ["A", "B"]
+  }
+
+schema:
+  type: object
+  required: ["prompt", "response", "topics"]
+  properties:
+    prompt:
+      type: string
+      description: "The user's message as natural text with inline topic-label tags, e.g. <LABEL>...</LABEL>."
+    response:
+      type: string
+      description: "The assistant's reply as natural text with inline topic-label tags; same topics as the prompt, in order."
+    topics:
+      type: array
+      minItems: 1
+      maxItems: 4
+      uniqueItems: true
+      items:
+        type: string
+        enum:
+          - "Enterprise documents"
+          - "General news & content"
+          - "Customer service"
+          - "Legal"
+          - "Financial"
+          - "HR & people operations"
+          - "Healthcare"
+      description: "The one to four topics used, in the order they appear."
+
+# taxonomy.json is hand-authored (see build_taxonomy.py). These values only apply if
+# that file is deleted.
+taxonomy:
+  depth: 2
+  factors: null
+
+# Custom prompts: multi-topic mandatory-topic meta-prompt (+ length target) + strict structural critic.
+prompts:
+  module: "simula_prompts.py"
+
+provider:
+  base_url: "https://openrouter.ai/api/v1"
+  api_key_env: "OPENROUTER_API_KEY"
+
+# All-Luna flex tier: Luna bulk-generates and critiques. The strategic model makes no calls while
+# taxonomy.json and strategies.json are pre-authored (it only fires if those files go missing).
+models:
+  strategic:
+    model: "openai/gpt-5.6-terra"
+    extra_body: { service_tier: "flex" }
+  bulk:
+    model: "openai/gpt-5.6-luna"
+    extra_body: { service_tier: "flex" }
+  critic:
+    model: "openai/gpt-5.6-luna"
+    extra_body: { service_tier: "flex" }
+
+# 10k production run at the tuned ~20%-single 1-4 topic mix. concurrency 128 (I/O-bound;
+# watch llm_calls.jsonl for 429s and back off if the account rate limit bites). Resumable.
+generation:
+  target_size: 10000
+  overgenerate_ratio: 1.1
+  complexity_ratio: 0.0
+  max_refine_attempts: 2
+  concurrency: 128
+  checkpoint_every: 25
+
+evaluation:
+  dedupe: true
+  coverage: true
+  coverage_mode: "lineage"

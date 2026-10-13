@@ -1,27 +1,68 @@
 [project]
 name = "sae-guardrails"
 version = "0.1.0"
-description = "Guardrails built on sparse autoencoders (SAEs) for interpreting and controlling model behavior."
+description = "Online topic guardrails: per-token topic detectors that read an LLM's activations, with and without sparse autoencoders."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "torch",
-    "transformers",
+    "torch>=2.4",
+    "transformers>=4.50",
+    "sae-lens",
     "datasets",
-    "safetensors",
     "huggingface_hub",
+    "safetensors",
+    "accelerate",
     "numpy",
-    "pandas",
     "scikit-learn",
+    "joblib",
+    "pyyaml",
     "tqdm",
     "matplotlib",
-    "reportlab",
-    "markdown",
-    "pyyaml",
-    "python-dotenv",
     "openai",
+    "python-dotenv",
 ]
+
+[project.optional-dependencies]
+fast = ["flash-attn"]
+logging = ["wandb"]
+
+# plain scripts, not an installable library: `pip install -e .` installs the dependencies only
+[tool.setuptools]
+packages = []
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+extend-exclude = ["blog", "blog_new", "blog_online", "new", "scrap", "topic-data-gen", "modeling", "data", "results"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "D"]
+ignore = [
+    "E501",   # long lines are left to the formatter; a few data tables and paths run long
+    "D105",   # magic methods
+    "D107",   # __init__ is documented on the class
+    "D203",   # one blank line before class docstring (conflicts with D211)
+    "D213",   # multi-line summary on the second line (conflicts with D212)
+    "D413",
+    # Kept as in the original research scripts rather than rewritten during the move:
+    "E702", "E731", "E741", "E402",  # compact one-liners, lambda helpers, short loop names, late imports
+    "B007", "B905",                  # unused loop variables, zip() without strict=
+    "B023",                          # lambdas built in a loop and used within the same iteration
+]
+
+[tool.ruff.lint.per-file-ignores]
+# helpers nested in main() use names that main() later frees with `del`; ruff reads them as undefined
+"preprocessing/build_static_cache.py" = ["F821"]
+"preprocessing/probe_selection.py" = ["F821"]
+# a few dead assignments in the original analysis scripts, left as they were
+"evals/knockout/knockout_raw.py" = ["F841"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = ["common", "models", "dataset", "evals", "preprocessing", "training"]

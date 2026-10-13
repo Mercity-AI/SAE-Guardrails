@@ -3,20 +3,25 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-data/
-new/
-topic-data-gen/
-bloc_online/
+# Local working folders: drafts, earlier experiments and data that live outside the repo
+blog_new/
 blog/
-data/
+blog_online/
+new/
 scrap/
-modelling/configs
-
-# Local project directories
+topic-data-gen/
 /modeling/
 /modelling/
-/dataset/
-/blog_online/
+paper/
+
+# Data, caches and run outputs (they live in the Hugging Face bucket; see the README)
+/data/
+/cache/
+/runs/
+/results/*
+!/results/live_prefill_simulation/
+/ablation/
+/logs/
 # C extensions
 *.so
 
@@ -127,9 +132,14 @@ data/runs/
 # Data artifacts
 prompts.jsonl
 *.jsonl
+# the 1,500 test prompts the perturbations start from ship with the code
+!evals/perturbations/manifest_test_full1500.jsonl
 
 # Archives
 *.tar.gz
 
 # Claude
 .claude/settings.local.json
+
+# old 2-topic live-prefill demo, kept locally only
+results/live_prefill_simulation/
