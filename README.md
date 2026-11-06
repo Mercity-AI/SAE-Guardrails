@@ -1,6 +1,6 @@
-# SAE Guardrails
+# Topic Score
 
-Accompanying repo for the post: <placeholder>
+Accompanying repo for the post: [Online Topic Guardrails with SAEs](https://www.mercity.ai/research/online-topic-guardrails-with-saes/)
 
 Online topic guardrails for LLMs. A small causal detector reads the model's activations and labels the topic of every token as it is generated. Because the label is per token, it can switch partway through a response, at the point where the subject changes. We train these detectors on Gemma 3 1B and 4B and compare three kinds of input: static and dynamic [Gemma Scope 2](https://deepmind.google/blog/gemma-scope-2-helping-the-ai-safety-community-deepen-understanding-of-complex-language-model-behavior) SAE features, and raw hidden states with no SAE.
 
@@ -18,7 +18,7 @@ These scores are on the 1,500-record test split: seven business topics, with pro
 - the dataset [`Mercity/topic-shift-10k`](https://huggingface.co/datasets/Mercity/topic-shift-10k);
 - the best 1B and 4B detector for each input: [`sae-summation`](https://huggingface.co/Mercity/online-guardrails-sae-summation), [`sae-fstatistic`](https://huggingface.co/Mercity/online-guardrails-sae-fstatistic), [`sae-grouplasso`](https://huggingface.co/Mercity/online-guardrails-sae-grouplasso), [`sae-dynamic`](https://huggingface.co/Mercity/online-guardrails-sae-dynamic) and [`raw-hidden`](https://huggingface.co/Mercity/online-guardrails-raw-hidden).
 
-## Requirements
+## Setup
 
 - **Python** 3.10 or newer. The original runs used Python 3.12, PyTorch 2.8 and CUDA 12.8.
 - **A CUDA GPU** for anything that runs Gemma: the quickstart, the cache builders, raw training, decode and the perturbation scoring. The 4B caches and the raw-hidden-state trainer ran on 80 GB cards.
@@ -26,14 +26,9 @@ These scores are on the 1,500-record test split: seven business topics, with pro
 - **Disk**, only for a full reproduction: the feature caches come to about 200 GB, 25–50 GB each.
 - **An API key** for an OpenAI-compatible endpoint, only to generate new perturbations or new data.
 
-## Setup
-
 ```bash
 pip install -r requirements.txt  # optional: flash-attn (FlashAttention-2), wandb (training logs)
-hf auth login                    # Gemma 3 is gated; accept its license on the Hub first
 ```
-
-The Gemma Scope SAEs download through `sae_lens` the first time they're needed.
 
 ## Quickstart: score the published detectors
 
@@ -151,18 +146,3 @@ python evals/perturbations/score_perturbations.py --kind removal --model-size 1b
 ```
 
 `score_perturbations.py` scores all four feature inputs by default; `--arm dynamic` picks one. `--kind confidence` scores the inserted asides for abstention: how confident the detectors are on them, compared with real topic tokens.
-
-> [!NOTE]
-> The perturbations start from the 1,500 test records in `evals/perturbations/manifest_test_full1500.jsonl`. `insert_offtopic` has an LLM add off-topic asides to each record, and the removal, reordering and substitution sets are built from its output.
->
-> To try your own perturbations:
-> - choose the model with `--model`, `--base-url` and `--api-key-env` (any OpenAI-compatible endpoint);
-> - edit the instructions in `injection_prompts.py`;
-> - check the prompts with `--dry-run`, then try a few records with `--limit 5`.
-
-## Conventions
-
-- **Split:** record-level 70/15/15 from `numpy.random.RandomState(42)`. Every feature-selection rule is fitted on the training split only.
-- **Supervision:** topic tokens in both the prompt and the response. Template tokens and the text between spans are unlabelled.
-- **Checkpoints:** we keep the epoch with the best validation macro-F1 and report every number on the test split.
-- **Scoring:** each token gets its argmax label, with no smoothing. Macro-F1 and overlap (per-topic IoU) are pooled over all labelled test tokens.
