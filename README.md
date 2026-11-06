@@ -1,6 +1,9 @@
-# Topic Score
+# TopicScope
 
-Accompanying repo for the post: [Online Topic Guardrails with SAEs](https://www.mercity.ai/research/online-topic-guardrails-with-saes/)
+<p align="center">
+  <a href="https://www.mercity.ai/research/online-topic-guardrails-with-saes/">📝 Blog post</a> -
+  <a href="https://huggingface.co/collections/Mercity/online-guardrails-using-sparse-autoencoders-6ac602940468c62fefb2b9e8">🤗 Hugging Face collection</a>
+</p>
 
 Online topic guardrails for LLMs. A small causal detector reads the model's activations and labels the topic of every token as it is generated. Because the label is per token, it can switch partway through a response, at the point where the subject changes. We train these detectors on Gemma 3 1B and 4B and compare three kinds of input: static and dynamic [Gemma Scope 2](https://deepmind.google/blog/gemma-scope-2-helping-the-ai-safety-community-deepen-understanding-of-complex-language-model-behavior) SAE features, and raw hidden states with no SAE.
 
@@ -13,7 +16,7 @@ Online topic guardrails for LLMs. A small causal detector reads the model's acti
 
 These scores are on the 1,500-record test split: seven business topics, with prompt and response tokens scored together.
 
-**Released** (collection: [Online Guardrails using Sparse Autoencoders](https://huggingface.co/collections/Mercity/online-guardrails-using-sparse-autoencoders-6ac602940468c62fefb2b9e8)):
+**Released** on Hugging Face:
 
 - the dataset [`Mercity/topic-shift-10k`](https://huggingface.co/datasets/Mercity/topic-shift-10k);
 - the best 1B and 4B detector for each input: [`sae-summation`](https://huggingface.co/Mercity/online-guardrails-sae-summation), [`sae-fstatistic`](https://huggingface.co/Mercity/online-guardrails-sae-fstatistic), [`sae-grouplasso`](https://huggingface.co/Mercity/online-guardrails-sae-grouplasso), [`sae-dynamic`](https://huggingface.co/Mercity/online-guardrails-sae-dynamic) and [`raw-hidden`](https://huggingface.co/Mercity/online-guardrails-raw-hidden).
