@@ -16,11 +16,6 @@ Online topic guardrails for LLMs. A small causal detector reads the model's acti
 
 These scores are on the 1,500-record test split: seven business topics, with prompt and response tokens scored together.
 
-**Released** on Hugging Face:
-
-- the dataset [`Mercity/topic-shift-10k`](https://huggingface.co/datasets/Mercity/topic-shift-10k);
-- the best 1B and 4B detector for each input: [`sae-summation`](https://huggingface.co/Mercity/online-guardrails-sae-summation), [`sae-fstatistic`](https://huggingface.co/Mercity/online-guardrails-sae-fstatistic), [`sae-grouplasso`](https://huggingface.co/Mercity/online-guardrails-sae-grouplasso), [`sae-dynamic`](https://huggingface.co/Mercity/online-guardrails-sae-dynamic) and [`raw-hidden`](https://huggingface.co/Mercity/online-guardrails-raw-hidden).
-
 ## Setup
 
 - **Python** 3.10 or newer. The original runs used Python 3.12, PyTorch 2.8 and CUDA 12.8.
