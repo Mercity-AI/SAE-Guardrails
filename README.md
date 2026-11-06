@@ -1,5 +1,7 @@
 # TopicScope
 
+Code, data and detectors for **Train on prefill, monitor at decode: Using sparse autoencoders for topic monitoring**.
+
 <p align="center">
   <a href="https://www.mercity.ai/research/online-topic-guardrails-with-saes/">📝 Blog post</a> -
   <a href="https://huggingface.co/collections/Mercity/online-guardrails-using-sparse-autoencoders-6ac602940468c62fefb2b9e8">🤗 Hugging Face collection</a>
@@ -16,28 +18,40 @@ Online topic guardrails for LLMs. A small causal detector reads the model's acti
 
 These scores are on the 1,500-record test split: seven business topics, with prompt and response tokens scored together.
 
+## Requirements
+
+| | Needed for |
+|---|---|
+| **Python 3.10+** (we used 3.12, PyTorch 2.8, CUDA 12.8) | everything |
+| **A CUDA GPU**, an 80 GB A100 recommended to avoid running out of memory | anything that runs Gemma: the quickstart, cache building, raw-state training, decode and perturbation scoring |
+| **Access to [Gemma 3](https://huggingface.co/google/gemma-3-1b-it)** on the Hugging Face Hub | everything that runs Gemma. The model is gated: accept its license, then log in with `hf auth login`. |
+| **~200 GB of disk** | a full reproduction only (the feature caches are 25–50 GB each) |
+| **An OpenAI-compatible API key** | generating new data or new perturbations only |
+
 ## Setup
 
-- **Python** 3.10 or newer. The original runs used Python 3.12, PyTorch 2.8 and CUDA 12.8.
-- **A CUDA GPU** for anything that runs Gemma: the quickstart, the cache builders, raw training, decode and the perturbation scoring. The 4B caches and the raw-hidden-state trainer ran on 80 GB cards.
-- **Gemma 3 access** on the Hugging Face Hub. The model is gated, so accept its license first.
-- **Disk**, only for a full reproduction: the feature caches come to about 200 GB, 25–50 GB each.
-- **An API key** for an OpenAI-compatible endpoint, only to generate new perturbations or new data.
-
 ```bash
-pip install -r requirements.txt  # optional: flash-attn (FlashAttention-2), wandb (training logs)
+git clone https://github.com/Mercity-AI/SAE-Guardrails.git
+cd SAE-Guardrails
+pip install -r requirements.txt
 ```
+
+Optional: `flash-attn` (FlashAttention-2 for the cache builders and raw-state trainer) and `wandb` (training logs).
 
 ## Quickstart: score the published detectors
 
-If you only want to evaluate the released checkpoints, this one script is all you need:
-
 ```bash
-python run.py --model-size 1b
-python run.py --model-size 4b --arms dynamic,raw --limit 50
+python run.py --model-size 1b                                # every detector on Gemma 3 1B
+python run.py --model-size 4b --arms dynamic,raw --limit 50  # a quick check on 50 records
 ```
 
-It downloads the test split and the detectors from the Hub and rebuilds each detector's input features from one teacher-forced pass. It then prints test macro-F1 and overlap next to the numbers recorded at training time. It needs no local cache.
+You don't need any local data or caches. `run.py` downloads everything from the Hugging Face Hub:
+
+- the 1,500 test records from [`Mercity/topic-shift-10k`](https://huggingface.co/datasets/Mercity/topic-shift-10k);
+- each detector's checkpoint and its selected SAE features from the [collection](https://huggingface.co/collections/Mercity/online-guardrails-using-sparse-autoencoders-6ac602940468c62fefb2b9e8);
+- Gemma 3 and its Gemma Scope 2 SAEs.
+
+It runs each record through Gemma once, rebuilds the features every detector reads, and prints test macro-F1 and overlap next to the scores recorded at training time. The results are also saved to `results/hf_detector_eval.json`. `--arms` takes any of `summation,fstatistic,grouplasso,dynamic,raw`.
 
 ## Layout
 
@@ -144,3 +158,13 @@ python evals/perturbations/score_perturbations.py --kind removal --model-size 1b
 ```
 
 `score_perturbations.py` scores all four feature inputs by default; `--arm dynamic` picks one. `--kind confidence` scores the inserted asides for abstention: how confident the detectors are on them, compared with real topic tokens.
+
+## Citation
+
+```bibtex
+@misc{mallagundla2026topicscope,
+  title  = {Train on prefill, monitor at decode: Using sparse autoencoders for topic monitoring},
+  author = {Mallagundla, Rishikesh and Patel, Pranav},
+  year   = {2026}
+}
+```
