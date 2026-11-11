@@ -1,9 +1,9 @@
 # TopicScope
 
-Code, data and detectors for [**Train on prefill, monitor at decode: Using sparse autoencoders for topic monitoring**](https://www.alphaxiv.org/pdf/2611.topicscope).
+Code, data and detectors for [**Train on prefill, monitor at decode: Using sparse autoencoders for topic monitoring**](https://arxiv.org/abs/2611.12935).
 
 <p align="center">
-  <a href="https://www.alphaxiv.org/pdf/2611.topicscope">📄 Paper</a> -
+  <a href="https://arxiv.org/abs/2611.12935">📄 Paper</a> -
   <a href="https://www.mercity.ai/research/online-topic-guardrails-with-saes/">📝 Blog post</a> -
   <a href="https://huggingface.co/collections/Mercity/online-guardrails-using-sparse-autoencoders-6ac602940468c62fefb2b9e8">🤗 Hugging Face collection</a>
 </p>
@@ -164,9 +164,12 @@ python evals/perturbations/score_perturbations.py --kind removal --model-size 1b
 
 ```bibtex
 @misc{mallagundla2026topicscope,
-  title  = {Train on prefill, monitor at decode: Using sparse autoencoders for topic monitoring},
-  author = {Mallagundla, Rishikesh and Patel, Pranav},
-  year   = {2026},
-  url    = {https://www.alphaxiv.org/pdf/2611.topicscope}
+  title         = {Train on prefill, monitor at decode: Using sparse autoencoders for topic monitoring},
+  author        = {Mallagundla, Rishikesh and Patel, Pranav},
+  year          = {2026},
+  eprint        = {2611.12935},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  url           = {https://arxiv.org/abs/2611.12935}
 }
 ```
